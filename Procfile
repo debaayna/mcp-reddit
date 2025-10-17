@@ -1,1 +1,1 @@
-web: gunicorn --bind 0.0.0.0:$PORT reddit-mcp-server:app
+web: gunicorn --bind 0.0.0.0:$PORT reddit_mcp_server:app
