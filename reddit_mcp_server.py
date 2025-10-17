@@ -32,10 +32,21 @@ manifest = {
 
 @app.route("/mcp/manifest.json")
 def manifest_route():
-    return jsonify(manifest)
+    response = jsonify(manifest)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
 
-@app.route("/mcp", methods=["POST"])
+@app.route("/mcp", methods=["POST", "OPTIONS"])
 def mcp_handler():
+    if request.method == "OPTIONS":
+        response = jsonify({"status": "ok"})
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return response
+
     body = request.json
 
     domain = body.get("domain")
@@ -58,16 +69,20 @@ def mcp_handler():
     response = requests.post(LAMBDA_URL, json=lambda_payload)
     if response.status_code == 200:
         lambda_response = response.json()
-        return jsonify({
+        result = jsonify({
             "type": "action_result",
             "result": lambda_response
         })
+        result.headers['Access-Control-Allow-Origin'] = '*'
+        return result
     else:
-        return jsonify({
+        error_result = jsonify({
             "error": "Lambda API call failed",
             "status_code": response.status_code,
             "response": response.text
-        }), 500
+        })
+        error_result.headers['Access-Control-Allow-Origin'] = '*'
+        return error_result, 500
 
 if __name__ == "__main__":
     import os
